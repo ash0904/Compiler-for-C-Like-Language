@@ -37,6 +37,7 @@
 %left '>'
 %left OR
 %left AND
+%left NOT_EQUAL
 %left '+' '-'
 %left '*' '/'
 %left '='
@@ -87,17 +88,13 @@ arith_expr        :     expr '+' expr
                   |     expr '/' expr
                   |     expr '*' expr
 
-/*
-bexpr             :     terminal
-                  |     bool_expr
-*/
 bool_op           :     EQUAL_EQUAL
                   |     GT_EQUAL
                   |     LT_EQUAL
                   |     '>'
                   |     '<'
 
-bool_expr         :     terminal bool_op terminal
+bool_expr         :     expr bool_op expr
                   |     bool_expr OR bool_expr
                   |     bool_expr AND bool_expr
 

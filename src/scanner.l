@@ -59,6 +59,7 @@ COLON						":"
 "=="							return EQUAL_EQUAL;
 "<="							return LT_EQUAL;
 ">="							return GT_EQUAL;
+"!="							return NOT_EQUAL;
 "="								{printf("Equal to\n");return '=';}
 ">"								return '>';
 "<"								return '<';
