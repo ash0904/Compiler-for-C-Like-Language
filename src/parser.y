@@ -5,30 +5,101 @@
   int yylex (void);
   void yyerror (char const *s);
 %}
-
-%token declaration_list
-%token statement_list
+%token IF
+%token FOR
+%token WHILE
+%token ELSE
+%token BREAK
+%token CONTINUE
+%token RETURN
+%token AND
+%token OR
+%token ARRAY
+%token DECL_BLOCK
+%token CODE_BLOCK
+%token TYPE
 %token NUMBER
 %token IDENTIFIER
 %token ETOK
-%left '+'
-%left '*'
+%token EQUAL_EQUAL
+%token LT_EQUAL
+%token GT_EQUAL
 
+%left EQUAL_EQUAL
+%left LT_EQUAL
+%left GT_EQUAL
+%left '<'
+%left '>'
+%left OR
+%left AND
+%left '+' '-'
+%left '*' '/'
+%left '='
+%left '!'
 %%
 
-program:	decl_block code_block
+program           :	     decl_block  code_block
 
-decl_block:  '{' declaration_list '}'
+/* decl_block starts*/
+decl_block        :      DECL_BLOCK '{' declaration_list '}'
 
-code_block:  '{' statement_list '}'
+declaration_list  :      /* epsilon */
+                  |      single_line ';' declaration_list
 
-/*
-expr	: 	expr '+' expr 
-	|	expr '*' expr 
-	| 	NUMBER
-	|	IDENTIFIER
-	;
-*/
+
+single_line       :      TYPE IDENTIFIER variables
+                  |      TYPE ARRAY variables
+
+variables         :      /* epsilon */
+                  |      ',' IDENTIFIER variables
+                  |      ',' ARRAY variables
+
+
+/* code_block starts */
+
+code_block        : CODE_BLOCK '{' statement_list '}'
+
+statement_list    :     /* epsilon */
+                  |     assign_expr ';' statement_list
+                  |     if_statement    statement_list
+                  |     while_statement statement_list
+                  |     for_statement   statement_list
+
+
+expr              :     IDENTIFIER
+                  |     NUMBER
+                  |     arith_expr
+
+assign_expr       :     IDENTIFIER '=' arith_expr
+                  |     IDENTIFIER '=' NUMBER
+                  |     IDENTIFIER '=' IDENTIFIER
+
+arith_expr        :     expr '+' expr
+                  |     expr '-' expr
+                  |     expr '/' expr
+                  |     expr '*' expr
+
+if_statement      :     IF bool_expr '{' statement_list '}'
+
+bexpr             :     IDENTIFIER
+                  |     NUMBER
+                  |     bool_expr
+
+bool_expr         :     bexpr EQUAL_EQUAL bexpr
+                  |     bexpr GT_EQUAL bexpr
+                  |     bexpr LT_EQUAL bexpr
+                  |     bexpr '>'  bexpr
+                  |     bexpr '<'  bexpr
+                  |     bexpr OR   bexpr
+                  |     bexpr AND  bexpr
+
+while_statement   :     WHILE bool_expr '{' statement_list '}'
+
+for_statement     :     FOR assign_expr ','
+
+
+
+
 
 %%
 
