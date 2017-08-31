@@ -4,19 +4,25 @@ declblock{
 }
 
 codeblock{
-	i = 0
+	i = 0;
 
-L1:	data[i] = i 
-	i = i + 1
-	goto L1 if i < 100
+L1:	data[i] = i ;
+	i = i + 1;
+	if i == 1
+  	{
+		sum = ayush;
+ 	}
+
+	goto L1 if i < 100;
 	
 
-	sum = 0
-	i = 0
-L2:	sum = sum + data[i]
-	i = i + 1
-	goto L2 if i < 100
+	sum = 0;
+	i = 0;
 
-	print "Sum value: ", sum
+L2:	sum = sum + data[i];
+	i = i + 1;
+	goto L2 if i < 100;
+
+	print "Sum value: ", sum;
 }
 

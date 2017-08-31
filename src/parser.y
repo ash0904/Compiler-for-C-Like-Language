@@ -14,7 +14,7 @@
 %token RETURN
 %token AND
 %token OR
-%token ARRAY
+%token ARRAY_VALUE
 %token DECL_BLOCK
 %token CODE_BLOCK
 %token TYPE
@@ -24,6 +24,11 @@
 %token EQUAL_EQUAL
 %token LT_EQUAL
 %token GT_EQUAL
+%token GOTO
+%token STRING_LITERAL
+%token PRINT
+%token READ
+%token LABEL
 
 %left EQUAL_EQUAL
 %left LT_EQUAL
@@ -48,11 +53,9 @@ declaration_list  :      /* epsilon */
 
 
 single_line       :      TYPE IDENTIFIER variables
-                  |      TYPE ARRAY variables
 
 variables         :      /* epsilon */
                   |      ',' IDENTIFIER variables
-                  |      ',' ARRAY variables
 
 
 /* code_block starts */
@@ -60,45 +63,63 @@ variables         :      /* epsilon */
 code_block        : CODE_BLOCK '{' statement_list '}'
 
 statement_list    :     /* epsilon */
-                  |     assign_expr ';' statement_list
-                  |     if_statement    statement_list
-                  |     while_statement statement_list
-                  |     for_statement   statement_list
+                  |     LABEL                statement_list
+                  |     assign_expr     ';'  statement_list
+                  |     if_statement         statement_list
+                  |     while_statement      statement_list
+                  |     for_statement        statement_list
+                  |     goto_statement  ';'  statement_list
+                  |     print_statement ';'  statement_list
+                  |     read_statement  ';'  statement_list
 
+assign_expr       :     IDENTIFIER  '=' expr
+                  |     ARRAY_VALUE '=' expr
 
-expr              :     IDENTIFIER
+terminal          :     IDENTIFIER
                   |     NUMBER
-                  |     arith_expr
+                  |     ARRAY_VALUE
 
-assign_expr       :     IDENTIFIER '=' arith_expr
-                  |     IDENTIFIER '=' NUMBER
-                  |     IDENTIFIER '=' IDENTIFIER
+expr              :     terminal
+                  |     arith_expr
 
 arith_expr        :     expr '+' expr
                   |     expr '-' expr
                   |     expr '/' expr
                   |     expr '*' expr
 
-if_statement      :     IF bool_expr '{' statement_list '}'
-
-bexpr             :     IDENTIFIER
-                  |     NUMBER
+/*
+bexpr             :     terminal
                   |     bool_expr
+*/
+bool_op           :     EQUAL_EQUAL
+                  |     GT_EQUAL
+                  |     LT_EQUAL
+                  |     '>'
+                  |     '<'
 
-bool_expr         :     bexpr EQUAL_EQUAL bexpr
-                  |     bexpr GT_EQUAL bexpr
-                  |     bexpr LT_EQUAL bexpr
-                  |     bexpr '>'  bexpr
-                  |     bexpr '<'  bexpr
-                  |     bexpr OR   bexpr
-                  |     bexpr AND  bexpr
+bool_expr         :     terminal bool_op terminal
+                  |     bool_expr OR bool_expr
+                  |     bool_expr AND bool_expr
+
+if_statement      :     IF bool_expr '{' statement_list '}'
+                  |     IF bool_expr '{' statement_list '}' ELSE '{' statement_list '}'
+
+goto_statement    :     GOTO IDENTIFIER
+                  |     GOTO IDENTIFIER IF bool_expr
 
 while_statement   :     WHILE bool_expr '{' statement_list '}'
 
-for_statement     :     FOR assign_expr ','
+for_statement     :     FOR assign_expr ',' NUMBER '{' statement_list '}'
+                  |     FOR assign_expr ',' NUMBER ',' NUMBER '{' statement_list '}'
 
+read_statement    :     READ IDENTIFIER
 
+print_statement   :     PRINT STRING_LITERAL content
+                  |     PRINT terminal content
 
+content           :      /* epsilon */
+                  |     ',' STRING_LITERAL  content
+                  |     ',' terminal  content
 
 
 %%
