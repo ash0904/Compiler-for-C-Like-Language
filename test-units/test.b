@@ -1,5 +1,5 @@
 declblock{
- int ayush,meta;
+ int ayush=1,meta;
  int sum[100];
 }
 codeblock{

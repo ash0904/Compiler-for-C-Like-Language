@@ -4,7 +4,12 @@
   FILE *yyin;
   int yylex (void);
   void yyerror (char const *s);
+  int fl = 0;
 %}
+
+%locations
+
+
 %token IF
 %token FOR
 %token WHILE
@@ -54,10 +59,11 @@ declaration_list  :      /* epsilon */
 
 
 single_line       :      TYPE IDENTIFIER variables
+                  |      TYPE IDENTIFIER '=' NUMBER variables
 
 variables         :      /* epsilon */
                   |      ',' IDENTIFIER variables
-
+                  |      ',' IDENTIFIER '=' NUMBER variables
 
 /* code_block starts */
 
@@ -121,13 +127,9 @@ content           :      /* epsilon */
 
 %%
 
-void yyerror (char const *s)
-{
-       fprintf (stderr, "%s\n", s);
-}
-
 int main(int argc, char *argv[])
 {
+
 	if (argc == 1 ) {
 		fprintf(stderr, "Correct usage: bcc filename\n");
 		exit(1);
@@ -141,4 +143,6 @@ int main(int argc, char *argv[])
 	yyin = fopen(argv[1], "r");
 
 	yyparse();
+  if(!fl)
+  printf("Parsing Done\n");
 }

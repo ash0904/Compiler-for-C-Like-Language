@@ -1,6 +1,14 @@
 %{
 #include "parser.tab.h"
+#include "common.h"
+
+void yyerror (char const *s)
+{
+			fl=1;
+      fprintf (stderr, "%s at statement -> %d\nNot parsed completely\n", s,yylineno);
+}
 %}
+%option yylineno
 
 IDENTIFIER  		[a-zA-Z][a-zA-Z0-9]*
 NUMBER					[0-9][0-9]*
@@ -50,7 +58,7 @@ COLON						":"
 										return TYPE;
 									}
 ","								return ',';
-";"								return ';';
+";"								{ yylineno ++; return ';'; }
 "+"								return '+';
 "-"								return '-';
 "*"								return '*';
@@ -93,6 +101,7 @@ COLON						":"
 
 [ \t]							{ /* Do nothing */ }
 .									{
+											fl = 1;
 		  								printf("Unexpected token encountered: %s\n", yytext);
 		  								return ETOK;
 									}
