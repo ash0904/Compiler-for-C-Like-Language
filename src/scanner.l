@@ -1,6 +1,12 @@
 %{
-#include "parser.tab.h"
+#include <bits/stdc++.h>
+#include "ClassDefs.h"
 #include "common.h"
+#include "parser.tab.h"
+#define YY_DECL extern "C" int yylex()
+	extern union Node yylval;
+	using namespace std;
+	int line_num = 0;
 
 void yyerror (char const *s)
 {
@@ -54,9 +60,13 @@ COLON						":"
 "read"						return READ;
 
 "int"             {
+										yylval.lit = strdup(yytext);
 										printf("Token type: INT, Lexeme/Token Value: %s\n", yytext);
 										return TYPE;
 									}
+"["								return '[';
+"]"								return ']';
+":"								return ':';
 ","								return ',';
 ";"								{ yylineno ++; return ';'; }
 "+"								return '+';
@@ -76,15 +86,11 @@ COLON						":"
 "&&"							return AND;
 
 
-{IDENTIFIER}{OB}{NUMBER}{CB}	{
-												printf("Token type: INTEGER ARRAY, Lexeme/Token Value: %s\n", yytext);
+{IDENTIFIER}			{
+												printf("Token type: IDENTIFIER, Lexeme/Token Value: %s\n", yytext);
 												return IDENTIFIER;
                 	}
 
-{IDENTIFIER}{OB}{IDENTIFIER}{CB}	{
-												printf("Token type: ACCESSING ARRAY, Lexeme/Token Value: %s\n", yytext);
-												return ARRAY_VALUE;
-                	}
 
 {NUMBER}					{
 												printf("Token type: Number, Lexeme/Token Value: %s\n", yytext);
@@ -93,10 +99,6 @@ COLON						":"
 {IDENTIFIER}{COLON} 			{
 												printf("Token type: LABEL, Lexeme/Token Value: %s\n", yytext);
 												return LABEL;
-		     					}
-{IDENTIFIER} 			{
-													printf("Token type: Identifier, Lexeme/Token Value: %s\n", yytext);
-													return IDENTIFIER;
 		     					}
 
 [ \t]							{ /* Do nothing */ }

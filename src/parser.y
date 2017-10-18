@@ -1,14 +1,22 @@
 %{
-  #include <stdio.h>
-  #include <stdlib.h>
-  FILE *yyin;
-  int yylex (void);
-  void yyerror (char const *s);
+  #include <bits/stdc++.h>
+  #include "ClassDefs.h"
   int fl = 0;
+
+  extern "C" int yylex();
+  extern "C" int yyparse();
+  extern "C" FILE *yyin;
+  extern "C" int line_num;
+  extern union Node yylval;
+  extern "C" int errors;
+  void yyerror(const char *s);
+  class Prog* start = NULL;
+  int errors=0;
+
 %}
 
-%locations
-
+/* -------------	Tokens 		------------- */
+%start program
 
 %token IF
 %token FOR
@@ -19,12 +27,11 @@
 %token RETURN
 %token AND
 %token OR
-%token ARRAY_VALUE
 %token DECL_BLOCK
 %token CODE_BLOCK
-%token TYPE
-%token NUMBER
-%token IDENTIFIER
+%token <lit> TYPE
+%token <val> NUMBER
+%token <lit> IDENTIFIER
 %token ETOK
 %token EQUAL_EQUAL
 %token LT_EQUAL
@@ -35,6 +42,7 @@
 %token READ
 %token LABEL
 
+/* -------------	Left Precedence		------------- */
 %left EQUAL_EQUAL
 %left LT_EQUAL
 %left GT_EQUAL
@@ -47,52 +55,61 @@
 %left '*' '/'
 %left '='
 %left '!'
+
+/* -------------	Non-Terminal Types		------------- */
+
+%type <prog> program;
+%type <decls> declaration_list;
+%type <decl> single_line ;
+%type <vars> variables;
+%type <var> variable;
+
 %%
 
-program           :	     decl_block  code_block
+program           :	    DECL_BLOCK '{' declaration_list '}'  CODE_BLOCK '{' statement_list '}'
+                                                          { $$ = new Prog($3,$7); start = $$;}
 
-/* decl_block starts*/
-decl_block        :      DECL_BLOCK '{' declaration_list '}'
+/* ------------ decl_block starts   ---------------- */
 
-declaration_list  :      /* epsilon */
-                  |      single_line ';' declaration_list
+declaration_list  :      /* epsilon */                    { $$ = new DeclList(); }
+                  |      declaration_list single_line ';' { $$->push_back($2); }
 
+single_line       :      TYPE variables                   { $$ = new Decl(string($1),$2); }
 
-single_line       :      TYPE IDENTIFIER variables
-                  |      TYPE IDENTIFIER '=' NUMBER variables
+variables         :      variable                         { $$ = new Variables(); $$->push_back($1); }
+                  |      variables ',' variable           { $$->push_back($3);}
 
-variables         :      /* epsilon */
-                  |      ',' IDENTIFIER variables
-                  |      ',' IDENTIFIER '=' NUMBER variables
+variable          :      IDENTIFIER                       { $$ = new Variable(string("simple"),$1);    }
+                  |      IDENTIFIER '[' NUMBER ']'        { $$ = new Variable(string("array"),$1,$3);  }
+                  |      IDENTIFIER '=' NUMBER            { $$ = new Variable(string("simple"),$1,"0",$3); }
 
 /* code_block starts */
 
-code_block        : CODE_BLOCK '{' statement_list '}'
+statement_list    :     /* epsilon */                           {$$ = new StatementList();}
+                  |     statement_list  statement               {$$->push_back($2);}
+                  |     statement_list IDENTIFIER ':' statement {$$->push_back($4,string($2));}
 
-statement_list    :     /* epsilon */
-                  |     LABEL                statement_list
-                  |     assign_expr     ';'  statement_list
-                  |     if_statement         statement_list
-                  |     while_statement      statement_list
-                  |     for_statement        statement_list
-                  |     goto_statement  ';'  statement_list
-                  |     print_statement ';'  statement_list
-                  |     read_statement  ';'  statement_list
+statement         :     assign_expr      ';'  { $$ = $1 } /* new AssignExpr($1); } */
+                  |     if_statement          { $$ = $1 } /* new IfStmt(); } */
+                  |     while_statement       { $$ = $1 } /* new WhileStmt(); } */
+                  |     for_statement         { $$ = $1 } /* new ForStmt(); } */
+                  |     goto_statement   ';'  { $$ = $1 } /* new GotoStmt(); } */
+                  |     print_statement  ';'  { $$ = $1 } /* new PrintStmt(); } */
+                  |     read_statement   ';'  { $$ = $1 } /* new ReadStmt(); } */
 
-assign_expr       :     IDENTIFIER  '=' expr
-                  |     ARRAY_VALUE '=' expr
+assign_expr       :     IDENTIFIER                  '=' expr    { $$ = new AssignExpr($1,$3);}
+                  |     IDENTIFIER '[' terminal ']' '=' expr    { $$ = new AssignExpr($1,$5,$3);}
 
-terminal          :     IDENTIFIER
-                  |     NUMBER
-                  |     ARRAY_VALUE
+terminal          :     IDENTIFIER  { $$ = $1; }
+                  |     NUMBER      { $$ = $1; }
 
-expr              :     terminal
-                  |     arith_expr
+expr              :     terminal    { $$=$1; }
+                  |     arith_expr  { $$=$1; }
 
-arith_expr        :     expr '+' expr
-                  |     expr '-' expr
-                  |     expr '/' expr
-                  |     expr '*' expr
+arith_expr        :     expr '+' expr { $$ = new ArithExpr($1,"+",$3);}
+                  |     expr '-' expr { $$ = new ArithExpr($1,"-",$3);}
+                  |     expr '/' expr { $$ = new ArithExpr($1,"/",$3);}
+                  |     expr '*' expr { $$ = new ArithExpr($1,"*",$3);}
 
 bool_op           :     EQUAL_EQUAL
                   |     GT_EQUAL
@@ -115,7 +132,7 @@ while_statement   :     WHILE bool_expr '{' statement_list '}'
 for_statement     :     FOR assign_expr ',' NUMBER '{' statement_list '}'
                   |     FOR assign_expr ',' NUMBER ',' NUMBER '{' statement_list '}'
 
-read_statement    :     READ IDENTIFIER
+read_statement    :     READ terminal
 
 print_statement   :     PRINT STRING_LITERAL content
                   |     PRINT terminal content
