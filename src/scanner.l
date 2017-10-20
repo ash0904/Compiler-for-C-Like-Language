@@ -50,12 +50,17 @@ COLON						":"
 "continue"				return CONTINUE;
 "return"					return RETURN;
 {STRING}					{
+										yylval.lit = strdup(yytext);
 										printf("string\n");
 										return STRING_LITERAL;
 									}
 "print"						{
 										printf("print\n");
 										return PRINT;
+									}
+"println"					{
+										printf("println\n");
+										return PRINTLN;
 									}
 "read"						return READ;
 
@@ -64,7 +69,7 @@ COLON						":"
 										printf("Token type: INT, Lexeme/Token Value: %s\n", yytext);
 										return TYPE;
 									}
-"["								return '[';
+"["								{ return '['; }
 "]"								return ']';
 ":"								return ':';
 ","								return ',';
@@ -74,32 +79,30 @@ COLON						":"
 "*"								return '*';
 "{"								return '{';
 "}"								return '}';
-"=="							return EQUAL_EQUAL;
-"<="							return LT_EQUAL;
-">="							return GT_EQUAL;
-"!="							return NOT_EQUAL;
+"=="							{yylval.lit = strdup(yytext); return EQUAL_EQUAL;}
+"<="							{yylval.lit = strdup(yytext); return LT_EQUAL;}
+">="							{yylval.lit = strdup(yytext); return GT_EQUAL;}
+"!="							{yylval.lit = strdup(yytext); return NOT_EQUAL;}
 "="								{printf("Equal to\n");return '=';}
-">"								return '>';
-"<"								return '<';
+">"								{yylval.lit = strdup(yytext); return '>';}
+"<"								{yylval.lit = strdup(yytext); return '<';}
 "!"								return '!';
-"||"							return OR;
-"&&"							return AND;
+"||"							{yylval.lit = strdup(yytext); return OR;}
+"&&"							{yylval.lit = strdup(yytext); return AND;}
 
 
 {IDENTIFIER}			{
+												yylval.lit = strdup(yytext);
 												printf("Token type: IDENTIFIER, Lexeme/Token Value: %s\n", yytext);
 												return IDENTIFIER;
                 	}
 
 
 {NUMBER}					{
+												yylval.num = stoi(yytext);
 												printf("Token type: Number, Lexeme/Token Value: %s\n", yytext);
 												return NUMBER;
                 	}
-{IDENTIFIER}{COLON} 			{
-												printf("Token type: LABEL, Lexeme/Token Value: %s\n", yytext);
-												return LABEL;
-		     					}
 
 [ \t]							{ /* Do nothing */ }
 .									{
