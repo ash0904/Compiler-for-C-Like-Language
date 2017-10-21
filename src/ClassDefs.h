@@ -29,7 +29,6 @@ union Node{
   char* lit;
   class Prog* prog;
   class DeclList* decls;
-  class Decl* decl;
   class Variables* vars;
   class Variable* var;
   class Statement* stmt;
@@ -51,7 +50,6 @@ union Node{
     lit = NULL;
     prog = NULL;
     decls = NULL;
-    decl = NULL;
     vars = NULL;
     var = NULL;
     stmts = NULL;
@@ -73,138 +71,185 @@ typedef union Node YYSTYPE;
 
 #define YYSTYPE_IS_DECLARED 1
 
-class BaseAst{
+class Visitor{
+public:
+  virtual int visit(class Prog* e) {}
+  virtual int visit(class DeclList* e) {}
+  virtual int visit(class Variables* e) {}
+  virtual int visit(class Variable* e) {}
+  // virtual int visit(class Statement* e) {}
+  virtual int visit(class StatementList* e) {}
+  virtual int visit(class Terminal* e) {}
+  virtual int visit(class Expr* e) {}
+  virtual int visit(class ArithExpr* e) {}
+  virtual int visit(class AssignExpr* e) {}
+  virtual int visit(class BoolExpr* e) {}
+  virtual int visit(class IfStmt* e) {}
+  virtual int visit(class WhileStmt* e) {}
+  virtual int visit(class GotoStmt* e) {}
+  virtual int visit(class ForStmt* e) {}
+  virtual int visit(class PrintStmt* e) {}
+  virtual int visit(class ReadStmt* e) {}
+};
 
+class Interpreter:public Visitor{
+public:
+  Interpreter(){}
+  int visit(class Prog* e);
+  int visit(class DeclList* e);
+  int visit(class Variables* e);
+  int visit(class Variable* e);
+  // int visit(class Statement* e);
+  int visit(class StatementList* e);
+  int visit(class Terminal* e);
+  int visit(class Expr* e);
+  int visit(class ArithExpr* e);
+  int visit(class AssignExpr* e);
+  int visit(class BoolExpr* e);
+  int visit(class IfStmt* e);
+  int visit(class WhileStmt* e);
+  int visit(class GotoStmt* e);
+  int visit(class ForStmt* e);
+  int visit(class PrintStmt* e);
+  int visit(class ReadStmt* e);
+};
+
+class BaseAst{
+public:
+  virtual int accept(Visitor* v){};
 };
 
 class Variable:public BaseAst{
 private:
-  string declType; /* Array or Normal */
-  string name; /* Name of the variable */
-  string dataType; /* type of variable */
-  unsigned int length; /* if it is an Array then length */
-  int initial_value;
 public:
-  /* Constructors */
+  string declType;
+  string name;
+  string dataType;
+  unsigned int length;
+  int initial_value;
   Variable(string,string);
   Variable(string,string,unsigned int);
   Variable(string,string,string,int);
-  void setDataType(string); /* Set the data Type */
+  void setDataType(string);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class Variables:public BaseAst{
 private:
-	vector<class Variable*> vars_list;
-  int cnt;
 public:
+  vector<class Variable*> vars_list;
+  int cnt;
+  string dataType;
 	Variables(){}
 	void push_back(class Variable*);
   vector<class Variable*> getVarsList();
-};
-
-class Decl:public BaseAst{
-private:
-	string dataType; /* Field declaration can have datatype and vaariables */
-	vector<class Variable*> var_list;
-public:
-  Decl(string);
-	Decl(string,class Variables*);
-	vector<class Variable*> getVarsList();
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class DeclList:public BaseAst{
 private:
-	vector<class Decl*> decl_list;
-	int cnt;
 public:
-	DeclList();
-	void push_back(class Decl*);
+  vector<class Variables*> decl_list;
+  int cnt;
+	DeclList(){}
+	void push_back(class Variables*);
+  vector<class Variables*> getDeclList();
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class Statement:public BaseAst{
 private:
-  string label;
 public:
+  string label;
   void setLabel(string label);
+  // int accept(Visitor* v){ return v->visit(this); }
 };
 
 class StatementList:public BaseAst{
 private:
-	vector<class Statement*> stmt_list;
 public:
+  vector<class Statement*> stmt_list;
 	StatementList(){}
   void push_back(class Statement*);
 	void push_back(class Statement*,string label);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class Terminal:public BaseAst{
 private:
+public:
   string type,name;
   int value;
   class Terminal* arr_pos;
-public:
   Terminal(string,string);
   Terminal(string,int);
   Terminal(string,string,class Terminal*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class Expr:public BaseAst{
 private:
+public:
   class Terminal* term;
   class ArithExpr* arith_expr;
-public:
   Expr(){};
   Expr(class Terminal*);
   Expr(class ArithExpr*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class ArithExpr:public BaseAst{
 private:
+public:
   class Expr* expr1;
   class Expr* expr2;
   string oper;
-public:
   ArithExpr(class Expr*,string,class Expr*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class AssignExpr:public Statement{
 private:
+public:
   class Terminal* array_val;
   class Expr* rhs;
   string lhs;
   bool arr;
-public:
   AssignExpr(string,class Expr*);
   AssignExpr(string,class Expr*,class Terminal*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 
 class BoolExpr:public BaseAst{
 private:
+public:
   class Expr  *expr1,*expr2;
   class BoolExpr *bexpr1,*bexpr2;
   string oper;
-public:
   BoolExpr(class Expr*,string,class Expr*);
   BoolExpr(class BoolExpr*,string,class BoolExpr*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class IfStmt:public Statement{
 private:
+public:
   string type;
   class BoolExpr* cond;
   class StatementList *if_part, *else_part;
-public:
   IfStmt(string,class BoolExpr*,class StatementList*);
   IfStmt(string,class BoolExpr*,class StatementList*,class StatementList*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class WhileStmt:public Statement{
 private:
+public:
   class BoolExpr* cond;
   class StatementList *stmts;
-public:
   WhileStmt(class BoolExpr*,class StatementList*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class GotoStmt:public Statement{
@@ -214,39 +259,44 @@ private:
 public:
   GotoStmt(string,string);
   GotoStmt(string,string,class BoolExpr*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class ForStmt:public Statement{
 private:
-  class AssignExpr* intial;
-  class Terminal *end_cond, * inc_value;
-  class StatementList* stmts;
 public:
+  class AssignExpr* initial;
+  class Terminal *end_cond, *inc_value;
+  class StatementList* stmts;
   ForStmt(class AssignExpr*,class Terminal*,class StatementList*);
   ForStmt(class AssignExpr*,class Terminal*,class Terminal*,class StatementList*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class ReadStmt:public Statement{
 private:
-  class Terminal* obj;
 public:
+  class Terminal* obj;
   ReadStmt(class Terminal*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 class PrintStmt:public Statement{
 private:
-  vector< class Terminal* > outs;
 public:
+  vector< class Terminal* > outs;
   bool line;
   PrintStmt(){}
   void push_back(class Terminal*);
+  int accept(Visitor* v){ return v->visit(this); }
 };
 
 
 class Prog:public BaseAst{
 private:
-  class DeclList* decls;
-	class StatementList* stmt;
 public:
+  class DeclList* decls;
+  class StatementList* stmt;
 	Prog(class DeclList*,class StatementList*);
+  int accept(Visitor* v){ return v->visit(this); }
 };

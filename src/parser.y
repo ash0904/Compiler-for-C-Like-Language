@@ -59,7 +59,7 @@
 
 %type <prog> program;
 %type <decls> declaration_list;
-%type <decl> single_line ;
+%type <vars> single_line ;
 %type <vars> variables;
 %type <var> variable;
 %type <stmt> statement;
@@ -86,14 +86,14 @@ program           :	    DECL_BLOCK '{' declaration_list '}'  CODE_BLOCK '{' stat
 declaration_list  :      /* epsilon */                    { $$ = new DeclList(); }
                   |      declaration_list single_line ';' { $$->push_back($2); }
 
-single_line       :      TYPE variables                   { $$ = new Decl(string($1),$2); }
+single_line       :      TYPE variables                   { $$ = $2; $$->dataType = $1; }
 
 variables         :      variable                         { $$ = new Variables(); $$->push_back($1); }
                   |      variables ',' variable           { $$->push_back($3);}
 
 variable          :      IDENTIFIER                       { $$ = new Variable(string("simple"),$1);    }
                   |      IDENTIFIER '[' NUMBER ']'        { $$ = new Variable(string("array"),$1,$3);  }
-                  |      IDENTIFIER '=' NUMBER            { $$ = new Variable(string("simple"),$1,"0",$3); }
+                  |      IDENTIFIER '=' NUMBER            { $$ = new Variable(string("initialised"),$1,"0",$3); }
 
 /* code_block starts */
 
@@ -174,10 +174,13 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Passing more arguments than necessary.\n");
 		fprintf(stderr, "Correct usage: bcc filename\n");
 	}
-
 	yyin = fopen(argv[1], "r");
 
 	yyparse();
   if(!fl)
+  {
     printf("Parsing Done\n");
+    Interpreter *it = new Interpreter();
+    start->accept(it);
+  }
 }
