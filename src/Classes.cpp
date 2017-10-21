@@ -214,10 +214,10 @@ int Interpreter::visit(class DeclList* obj){
   Interpreter *it = new Interpreter();
   for(auto i : obj->decl_list)
     i->accept(it);
-  for(auto i = stable.begin();i!= stable.end();i++)
-  {
-    cout<<i->first <<" ==> "<<i->second<<endl;
-  }
+  // for(auto i = stable.begin();i!= stable.end();i++)
+  // {
+  //   cout<<i->first <<" ==> "<<i->second<<endl;
+  // }
   return 0;
 }
 
@@ -234,7 +234,12 @@ int Interpreter::visit(class Variable* obj){
   if(obj->declType=="initialised")
     stable[obj->name] = obj->initial_value;
   if(obj->declType=="array")
-    stable[obj->name]=0;
+  {
+    for(int i=0;i<obj->length;i++)
+    {
+      stable[to_string(i)+obj->name]=0;
+    }
+  }
   return 0;
 }
 
