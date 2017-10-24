@@ -1,5 +1,5 @@
 declblock{
- int ayush=1,meta;
+ int ayush=1,meta,data[10];
  int sum,i=0;
 }
 codeblock{
@@ -17,13 +17,13 @@ codeblock{
 	for i = ayush - 1,5 {
 		sum = sum + i;
 	}
-	read meta; 
+	read meta;
 	println "you entered meta as: ",meta, " but sum is: ",sum; 
 	while sum >= 2 {
-		println sum;
+		println "vivky",sum;
 		sum = sum -1;
 	}
-	println "done";
+L1:	println "done";
 
 
 }

@@ -51,7 +51,7 @@
 %left OR
 %left AND
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %left '='
 %left '!'
 
@@ -100,7 +100,7 @@ variable          :      IDENTIFIER                       { $$ = new Variable(st
 statement_list    :     /* epsilon */                           { $$ = new StatementList();}
                   |     statement_list  statement               { $$->push_back($2);}
                   |     statement_list IDENTIFIER ':' statement { $$->push_back($4,string($2));}
- 
+
 statement         :     assign_expr      ';'  { $$ = $1; }
                   |     if_statement          { $$ = $1; }
                   |     while_statement       { $$ = $1; }
@@ -123,6 +123,7 @@ arith_expr        :     expr '+' expr { $$ = new ArithExpr($1,"+",$3); }
                   |     expr '-' expr { $$ = new ArithExpr($1,"-",$3); }
                   |     expr '/' expr { $$ = new ArithExpr($1,"/",$3); }
                   |     expr '*' expr { $$ = new ArithExpr($1,"*",$3); }
+                  |     expr '%' expr { $$ = new ArithExpr($1,"%",$3); }
 
 bool_op           :     EQUAL_EQUAL { $$ = $1; }
                   |     GT_EQUAL    { $$ = $1; }

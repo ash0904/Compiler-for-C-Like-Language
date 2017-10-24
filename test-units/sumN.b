@@ -13,7 +13,7 @@ codeblock{
 	for i = 1, 100 {
 		sum = sum + data[0] ;
  	}
-
+	
 	print "Sum value: ", sum ;
 }
 

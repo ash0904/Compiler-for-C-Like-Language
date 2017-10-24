@@ -77,6 +77,8 @@ COLON						":"
 "+"								return '+';
 "-"								return '-';
 "*"								return '*';
+"/"								return '/';	
+"%"								return '%';
 "{"								return '{';
 "}"								return '}';
 "=="							{yylval.lit = strdup(yytext); return EQUAL_EQUAL;}

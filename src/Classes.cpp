@@ -197,7 +197,6 @@ void StatementList::push_back(class Statement* stmt,string label){
   stmt->setLabel(label);
   stmt_list.push_back(stmt);
   ltable[label] = cnt;
-  cout<<label<<" "<<cnt<<"\n";
   this->cnt++;
 }
 
@@ -282,6 +281,8 @@ int Interpreter::visit(class ArithExpr* obj){
     return obj->expr1->accept(it) * obj->expr2->accept(it);
   if(obj->oper == "/")
     return obj->expr1->accept(it) / obj->expr2->accept(it);
+  if(obj->oper == "%")
+    return obj->expr1->accept(it) % obj->expr2->accept(it);
 }
 
 int Interpreter::visit(class AssignExpr* obj){
@@ -296,6 +297,19 @@ int Interpreter::visit(class AssignExpr* obj){
     else
     {
       stable[obj->lhs] = obj->rhs->accept(it);
+    }
+  }
+  else
+  {
+    int cur = obj->array_val->accept(it);
+    if(stable.find(to_string(cur)+obj->lhs)==stable.end())
+    {
+      cout<<"Error: variable "<<obj->lhs<<"["<<cur<<"] not defined\n";
+      return -1;
+    }
+    else
+    {
+      stable[to_string(cur)+obj->lhs] = obj->rhs->accept(it);
     }
   }
   return 0;
@@ -370,7 +384,10 @@ int Interpreter::visit(class ReadStmt* obj){
   Interpreter *it = new Interpreter();
   int ans;
   cin>>ans;
-  stable[obj->obj->name] = ans;
+  if(obj->obj->type=="array")
+    stable[to_string(obj->obj->accept(it)) + obj->obj->name] = ans;
+  else
+    stable[obj->obj->name] = ans;
   return 0;
 }
 
@@ -381,9 +398,9 @@ int Interpreter::visit(class Terminal* obj){
   if(obj->type == "num")
     return obj->value;
   if(obj->type=="array")
-    return stable[obj->name];
+    return stable[to_string(obj->arr_pos->accept(it))+obj->name];
   if(obj->type=="strlit")
-    cout<<obj->name;
+    cout<<obj->name.substr(1,obj->name.length()-2);
   return 0;
 }
 
