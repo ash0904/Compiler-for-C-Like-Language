@@ -13,7 +13,7 @@ static std::map<std::string, llvm::AllocaInst *> NamedValues;
 static FunctionPassManager *TheFPM;
 
 map < string, int > stable;
-map < string, class Statement*> ltable;
+map < string, int> ltable;
 
 /* Usefull Functions */
 
@@ -190,15 +190,23 @@ void Statement::setLabel(string label){
 
 void StatementList::push_back(class Statement* stmt){
   stmt_list.push_back(stmt);
+  this->cnt++;
 }
 
 void StatementList::push_back(class Statement* stmt,string label){
   stmt->setLabel(label);
   stmt_list.push_back(stmt);
+  ltable[label] = cnt;
+  cout<<label<<" "<<cnt<<"\n";
+  this->cnt++;
 }
 
 void PrintStmt::push_back(class Terminal* cont){
   outs.push_back(cont);
+}
+
+string GotoStmt::getLabel(){
+  return this->label;
 }
 
 /******* interpreting the AST formed **********/
@@ -214,10 +222,6 @@ int Interpreter::visit(class DeclList* obj){
   Interpreter *it = new Interpreter();
   for(auto i : obj->decl_list)
     i->accept(it);
-  // for(auto i = stable.begin();i!= stable.end();i++)
-  // {
-  //   cout<<i->first <<" ==> "<<i->second<<endl;
-  // }
   return 0;
 }
 
@@ -248,10 +252,22 @@ int Interpreter::visit(class Variable* obj){
 //   return 0;
 // }
 
+string getLabel(class GotoStmt* obj)
+{
+  return obj->label;
+}
 int Interpreter::visit(class StatementList* obj){
   Interpreter *it = new Interpreter();
-  for(auto i : obj->stmt_list)
-    i->accept(it);
+  int num=0,i=0;
+  for(i=0;i<obj->cnt;i++)
+  {
+    num = obj->stmt_list[i]->accept(it);
+    if(num==-10)
+    {
+      string label = obj->stmt_list[i]->getLabel();
+      i = ltable[label]-1;
+    }
+  }
   return 0;
 }
 
@@ -315,6 +331,10 @@ int Interpreter::visit(class WhileStmt* obj){
 
 int Interpreter::visit(class GotoStmt* obj){
   Interpreter *it = new Interpreter();
+  if(obj->type=="single")
+    return -10;
+  if(obj->cond->accept(it))
+    return -10;
   return 0;
 }
 

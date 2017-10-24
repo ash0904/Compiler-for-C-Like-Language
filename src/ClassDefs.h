@@ -162,6 +162,7 @@ private:
 public:
   string label;
   void setLabel(string label);
+  virtual string getLabel(){}
   // int accept(Visitor* v){ return v->visit(this); }
 };
 
@@ -169,7 +170,8 @@ class StatementList:public BaseAst{
 private:
 public:
   vector<class Statement*> stmt_list;
-	StatementList(){}
+  int cnt;
+	StatementList(){cnt=0;}
   void push_back(class Statement*);
 	void push_back(class Statement*,string label);
   int accept(Visitor* v){ return v->visit(this); }
@@ -254,12 +256,13 @@ public:
 
 class GotoStmt:public Statement{
 private:
+public:
   string type,label;
   class BoolExpr* cond;
-public:
   GotoStmt(string,string);
   GotoStmt(string,string,class BoolExpr*);
   int accept(Visitor* v){ return v->visit(this); }
+  string getLabel();
 };
 
 class ForStmt:public Statement{
