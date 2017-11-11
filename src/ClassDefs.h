@@ -117,6 +117,7 @@ public:
 class BaseAst{
 public:
   virtual int accept(Visitor* v){};
+	virtual Value* codegen() {}
 };
 
 class Variable:public BaseAst{
@@ -132,6 +133,7 @@ public:
   Variable(string,string,string,int);
   void setDataType(string);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class Variables:public BaseAst{
@@ -144,6 +146,7 @@ public:
 	void push_back(class Variable*);
   vector<class Variable*> getVarsList();
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class DeclList:public BaseAst{
@@ -155,6 +158,7 @@ public:
 	void push_back(class Variables*);
   vector<class Variables*> getDeclList();
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class Statement:public BaseAst{
@@ -164,6 +168,7 @@ public:
   void setLabel(string label);
   virtual string getLabel(){}
   // int accept(Visitor* v){ return v->visit(this); }
+  // virtual Value* codegen();
 };
 
 class StatementList:public BaseAst{
@@ -175,6 +180,7 @@ public:
   void push_back(class Statement*);
 	void push_back(class Statement*,string label);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class Terminal:public BaseAst{
@@ -187,6 +193,7 @@ public:
   Terminal(string,int);
   Terminal(string,string,class Terminal*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class Expr:public BaseAst{
@@ -198,6 +205,7 @@ public:
   Expr(class Terminal*);
   Expr(class ArithExpr*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class ArithExpr:public BaseAst{
@@ -208,6 +216,7 @@ public:
   string oper;
   ArithExpr(class Expr*,string,class Expr*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class AssignExpr:public Statement{
@@ -220,6 +229,7 @@ public:
   AssignExpr(string,class Expr*);
   AssignExpr(string,class Expr*,class Terminal*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 
@@ -232,6 +242,7 @@ public:
   BoolExpr(class Expr*,string,class Expr*);
   BoolExpr(class BoolExpr*,string,class BoolExpr*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class IfStmt:public Statement{
@@ -243,15 +254,17 @@ public:
   IfStmt(string,class BoolExpr*,class StatementList*);
   IfStmt(string,class BoolExpr*,class StatementList*,class StatementList*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class WhileStmt:public Statement{
 private:
-public:
+public: 
   class BoolExpr* cond;
   class StatementList *stmts;
   WhileStmt(class BoolExpr*,class StatementList*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class GotoStmt:public Statement{
@@ -263,6 +276,7 @@ public:
   GotoStmt(string,string,class BoolExpr*);
   int accept(Visitor* v){ return v->visit(this); }
   string getLabel();
+  Value* codegen();
 };
 
 class ForStmt:public Statement{
@@ -274,6 +288,7 @@ public:
   ForStmt(class AssignExpr*,class Terminal*,class StatementList*);
   ForStmt(class AssignExpr*,class Terminal*,class Terminal*,class StatementList*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class ReadStmt:public Statement{
@@ -282,6 +297,7 @@ public:
   class Terminal* obj;
   ReadStmt(class Terminal*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 class PrintStmt:public Statement{
@@ -292,6 +308,7 @@ public:
   PrintStmt(){}
   void push_back(class Terminal*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
 };
 
 
@@ -302,4 +319,6 @@ public:
   class StatementList* stmt;
 	Prog(class DeclList*,class StatementList*);
   int accept(Visitor* v){ return v->visit(this); }
+  Value* codegen();
+  void generateCode();
 };

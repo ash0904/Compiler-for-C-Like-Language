@@ -4,9 +4,9 @@
 #include "common.h"
 #include "parser.tab.h"
 #define YY_DECL extern "C" int yylex()
-	extern union Node yylval;
-	using namespace std;
-	int line_num = 0;
+extern union Node yylval;
+using namespace std;
+int line_num = 0;
 
 void yyerror (char const *s)
 {
@@ -24,25 +24,22 @@ STRING					\"(\\.|[^\\"])*\"
 COLON						":"
 %%
 
+
 "declblock"				return DECL_BLOCK;
 "codeblock"				return CODE_BLOCK;
 
 "if"							{
-										printf("IF condition : %s\n", yytext);
 										return IF;
 									}
 
 "goto"						{
-										printf("GOTO condition : %s\n", yytext);
 										return GOTO;
 									}
 "for"							{
-										printf("FOR condition : %s\n", yytext);
 										return FOR;
 									}
 
 "while"						{
-										printf("WHILE condition : %s\n", yytext);
 										return WHILE;
 									}
 "else"						return ELSE;
@@ -51,22 +48,18 @@ COLON						":"
 "return"					return RETURN;
 {STRING}					{
 										yylval.lit = strdup(yytext);
-										printf("string\n");
 										return STRING_LITERAL;
 									}
 "print"						{
-										printf("print\n");
 										return PRINT;
 									}
 "println"					{
-										printf("println\n");
 										return PRINTLN;
 									}
 "read"						return READ;
 
 "int"             {
 										yylval.lit = strdup(yytext);
-										printf("Token type: INT, Lexeme/Token Value: %s\n", yytext);
 										return TYPE;
 									}
 "["								{ return '['; }
@@ -77,7 +70,7 @@ COLON						":"
 "+"								return '+';
 "-"								return '-';
 "*"								return '*';
-"/"								return '/';	
+"/"								return '/';
 "%"								return '%';
 "{"								return '{';
 "}"								return '}';
@@ -85,7 +78,7 @@ COLON						":"
 "<="							{yylval.lit = strdup(yytext); return LT_EQUAL;}
 ">="							{yylval.lit = strdup(yytext); return GT_EQUAL;}
 "!="							{yylval.lit = strdup(yytext); return NOT_EQUAL;}
-"="								{printf("Equal to\n");return '=';}
+"="								{return '=';}
 ">"								{yylval.lit = strdup(yytext); return '>';}
 "<"								{yylval.lit = strdup(yytext); return '<';}
 "!"								return '!';
@@ -95,20 +88,17 @@ COLON						":"
 
 {IDENTIFIER}			{
 												yylval.lit = strdup(yytext);
-												printf("Token type: IDENTIFIER, Lexeme/Token Value: %s\n", yytext);
 												return IDENTIFIER;
                 	}
 
 
 {NUMBER}					{
 												yylval.num = stoi(yytext);
-												printf("Token type: Number, Lexeme/Token Value: %s\n", yytext);
 												return NUMBER;
                 	}
 
-[ \t]							{ /* Do nothing */ }
+[ \t\n]							{ /* Do nothing */ }
 .									{
 											fl = 1;
-		  								printf("Unexpected token encountered: %s\n", yytext);
 		  								return ETOK;
 									}

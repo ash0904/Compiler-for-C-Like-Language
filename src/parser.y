@@ -144,7 +144,7 @@ goto_statement    :     GOTO IDENTIFIER                        { $$ = new GotoSt
 
 while_statement   :     WHILE bool_expr '{' statement_list '}' { $$ = new WhileStmt($2,$4); }
 
-for_statement     :     FOR assign_expr ',' terminal '{' statement_list '}'              { $$ = new ForStmt($2,$4,$6);    }
+for_statement     :     FOR assign_expr ',' terminal '{' statement_list '}'              { $$ = new ForStmt($2,$4,new Terminal("num",1),$6);}
                   |     FOR assign_expr ',' terminal ',' terminal '{' statement_list '}' { $$ = new ForStmt($2,$4,$6,$8); }
 
 read_statement    :     READ terminal                    { $$ = new ReadStmt($2);   }
@@ -177,11 +177,20 @@ int main(int argc, char *argv[])
 	}
 	yyin = fopen(argv[1], "r");
 
+  /* parsing the code */
 	yyparse();
   if(!fl)
   {
     printf("Parsing Done\n");
+
+    /* interpreting and forming up the AST */
     Interpreter *it = new Interpreter();
     start->accept(it);
+
+    /* generating the IR */
+    start->codegen();
+
+    /* Produce the IR */
+    start->generateCode();
   }
 }
