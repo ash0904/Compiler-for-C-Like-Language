@@ -11,6 +11,6 @@ lex.yy.c: scanner.l
 parser.tab.c: parser.y
 	bison -vd parser.y
 clean:
-	rm -f *.c parser.tab.h *.output llout
+	rm -f *.c parser.tab.h *.output llout a.out
 veryclean:
 	rm -f *.c parser.tab.h a.out XML_* *.output

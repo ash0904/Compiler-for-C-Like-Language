@@ -14,7 +14,9 @@ static IRBuilder<> Builder(Context);
 
 /* Get the function type and create a Function */
   FunctionType *FT = llvm::FunctionType::get(Builder.getVoidTy(),false);
-  Function *F = llvm::Function::Create(FT, Function::ExternalLinkage, "CodeBlock", TheModule);
+  Function *F = llvm::Function::Create(FT, Function::ExternalLinkage, "main", TheModule);
+  Constant *CalleeF = TheModule->getOrInsertFunction("printf",FunctionType::get(IntegerType::getInt32Ty(Context), PointerType::get(Type::getInt8Ty(Context), 0), true /* this is var arg func type*/)
+                                                   );
 
 /* defined by me for Interpreter */
 map < string, int > stable;
@@ -461,6 +463,7 @@ Value* Prog::codegen(){
   BasicBlock *BB = BasicBlock::Create(getGlobalContext(), "entry", F);
   Builder.SetInsertPoint(BB);
   V = stmt->codegen();
+  Builder.CreateRetVoid();
   return V;
 }
 
@@ -478,15 +481,33 @@ Value* DeclList::codegen(){
 }
 
 Value* Variables::codegen(){
-  class Variable* var;
-  llvm::Type *ty;
   for(int i = 0; i < cnt; i++){
+    class Variable* var;
+    llvm::Type *ty;
     var = vars_list[i];
-    if(dataType == "int"){
-      ty = Type::getInt32Ty(Context);
+    ty = Type::getInt32Ty(Context);
+    if(var->declType == "simple"){
+      TheModule->getOrInsertGlobal(var->name,Builder.getInt32Ty());
+      PointerType* ptrTy = PointerType::get(ty,0);
+      GlobalVariable* gv = TheModule->getNamedGlobal(var->name);
+      gv->setLinkage(GlobalValue::CommonLinkage);
+      ConstantInt* const_int_val = ConstantInt::get(Context, APInt(32,0));
+      gv->setInitializer(const_int_val);
     }
-    PointerType* ptrTy = PointerType::get(ty,0);
-    GlobalVariable* gv = new GlobalVariable(*TheModule,ptrTy , false,GlobalValue::ExternalLinkage, 0, var->name);
+    else if(var->declType=="intialised"){
+     TheModule->getOrInsertGlobal(var->name,Builder.getInt32Ty());
+     PointerType* ptrTy = PointerType::get(ty,0);
+     GlobalVariable* gv = TheModule->getNamedGlobal(var->name);
+     gv->setLinkage(GlobalValue::CommonLinkage);
+     ConstantInt* const_int_val = ConstantInt::get(Context, APInt(32,var->initial_value));
+     gv->setInitializer(const_int_val);
+    }
+    else if(var->declType=="array"){
+      ArrayType* arrType= ArrayType::get(ty,var->length);
+       PointerType* ptrTy = PointerType::get(ArrayType::get(ty,var->length),0);
+      GlobalVariable* gv = new GlobalVariable(*TheModule,arrType,false,GlobalValue::ExternalLinkage,0,var->name);
+      gv->setInitializer(ConstantAggregateZero::get(arrType));
+    }
   }
   Value* v = ConstantInt::get(getGlobalContext(), APInt(32,1));
   return v;
@@ -674,6 +695,15 @@ Value* GotoStmt::codegen(){
   return V;
 }
 
+Value* PrintStmt::codegen(){
+  vector<Value *> ArgsV;
+   for (unsigned int i = 0, e = outs.size(); i != e; ++i)
+     ArgsV.push_back(outs[i]->codegen());
+
+  Value* V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+  return V;
+}
+
 /* ------------ yet to define ------------ */
 
 Value* Variable::codegen(){
@@ -682,11 +712,6 @@ Value* Variable::codegen(){
 }
 
 Value* ReadStmt::codegen(){
-  Value *V = ConstantInt::get(getGlobalContext(), APInt(32,0));
-  return V;
-}
-
-Value* PrintStmt::codegen(){
   Value *V = ConstantInt::get(getGlobalContext(), APInt(32,0));
   return V;
 }
