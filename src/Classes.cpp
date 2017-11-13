@@ -494,7 +494,7 @@ Value* Variables::codegen(){
       ConstantInt* const_int_val = ConstantInt::get(Context, APInt(32,0));
       gv->setInitializer(const_int_val);
     }
-    else if(var->declType=="intialised"){
+    else if(var->declType=="initialised"){
      TheModule->getOrInsertGlobal(var->name,Builder.getInt32Ty());
      PointerType* ptrTy = PointerType::get(ty,0);
      GlobalVariable* gv = TheModule->getNamedGlobal(var->name);
@@ -539,7 +539,6 @@ Value* Terminal::codegen(){
   }
   else if(type=="array"){
     Value* vname = TheModule->getNamedGlobal(name);
-
     Value* vpos = arr_pos->codegen();
 
     vector<Value*> array_index;
@@ -548,6 +547,10 @@ Value* Terminal::codegen(){
     V = Builder.CreateGEP(vname, array_index, "Concerned_Index");
     V = Builder.CreateLoad(V);
     return V;
+  }
+  else if(type=="strlit"){
+    Value* to_print = Builder.CreateGlobalStringPtr(name.substr(1,name.length()-2));
+    return to_print;
   }
 }
 
@@ -721,16 +724,42 @@ Value* GotoStmt::codegen(){
 }
 
 Value* PrintStmt::codegen(){
-  // vector<Value *> ArgsV;
-  //  for (unsigned int i = 0, e = outs.size(); i != e; ++i){
-  //    Value *to_print = outs[i]->codegen();
-  //
-  //    ArgsV.push_back();
-  // }
+  Value* V,*val,*to_print;
+  vector<Value *> ArgsV;
+  for (unsigned int i = 0, e = outs.size(); i != e; ++i){
+    to_print = outs[i]->codegen();
+    if(outs[i]->type=="id" || outs[i]->type=="array"){
+      val=Builder.CreateGlobalStringPtr("%d");
+    }
+    else if(outs[i]->type=="strlit"){
+      val = Builder.CreateGlobalStringPtr("%s");
+    }
 
-  // Value* V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
-  Value *V = ConstantInt::get(getGlobalContext(), APInt(32,0));
-  return V;
+    ArgsV.clear();
+    ArgsV.push_back(val);
+    ArgsV.push_back(to_print);
+    V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+
+    if(i!=e-1){
+      val = Builder.CreateGlobalStringPtr("%s");
+      to_print = Builder.CreateGlobalStringPtr(" ");
+
+      ArgsV.clear();
+      ArgsV.push_back(val);
+      ArgsV.push_back(to_print);
+
+      V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+    }
+  }
+  if(line){
+    ArgsV.clear();
+    Value* val = Builder.CreateGlobalStringPtr("%s");
+    Value* to_print = Builder.CreateGlobalStringPtr("\n");
+    ArgsV.push_back(val);
+    ArgsV.push_back(to_print);
+    V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+  }
+return V;
 }
 
 /* ------------ yet to define ------------ */
