@@ -528,23 +528,48 @@ Value* StatementList::codegen(){
 
 Value* Terminal::codegen(){
   Value *V = ConstantInt::get(getGlobalContext(), APInt(32,0));
-  if(type == "id")
-  {
+  if(type == "id"){
     Value* v = TheModule->getNamedGlobal(name);
     v = Builder.CreateLoad(v);
     return v;
   }
-  else if(type == "num")
-  {
+  else if(type == "num"){
     Value *v = ConstantInt::get(getGlobalContext(), APInt(32,value));
     return v;
+  }
+  else if(type=="array"){
+    Value* vname = TheModule->getNamedGlobal(name);
+
+    Value* vpos = arr_pos->codegen();
+
+    vector<Value*> array_index;
+    array_index.push_back(Builder.getInt32(0));
+    array_index.push_back(vpos);
+    V = Builder.CreateGEP(vname, array_index, "Concerned_Index");
+    V = Builder.CreateLoad(V);
+    return V;
   }
 }
 
 Value* AssignExpr::codegen(){
-  Value* v = TheModule->getNamedGlobal(lhs);
+  if(!arr){
+    Value* v = TheModule->getNamedGlobal(lhs);
+    Value* rhs_eval = rhs->codegen();
+    return Builder.CreateStore(rhs_eval,v);
+  }
+  // if array
+  Value* vname = TheModule->getNamedGlobal(lhs);
+  Value* vpos = array_val->codegen();
+
+  vector<Value*> array_index;
+  array_index.push_back(Builder.getInt32(0));
+  array_index.push_back(vpos);
+  Value* V = Builder.CreateGEP(vname, array_index, "Concerned_Index");
+
   Value* rhs_eval = rhs->codegen();
-  return Builder.CreateStore(rhs_eval,v);
+  Value* fin = Builder.CreateStore(rhs_eval,V);
+  return fin;
+
 }
 
 Value* Expr::codegen(){
@@ -696,11 +721,15 @@ Value* GotoStmt::codegen(){
 }
 
 Value* PrintStmt::codegen(){
-  vector<Value *> ArgsV;
-   for (unsigned int i = 0, e = outs.size(); i != e; ++i)
-     ArgsV.push_back(outs[i]->codegen());
+  // vector<Value *> ArgsV;
+  //  for (unsigned int i = 0, e = outs.size(); i != e; ++i){
+  //    Value *to_print = outs[i]->codegen();
+  //
+  //    ArgsV.push_back();
+  // }
 
-  Value* V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+  // Value* V =  Builder.CreateCall(CalleeF, ArgsV, "printfCall");
+  Value *V = ConstantInt::get(getGlobalContext(), APInt(32,0));
   return V;
 }
 
