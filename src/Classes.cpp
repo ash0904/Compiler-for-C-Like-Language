@@ -518,6 +518,7 @@ Value* StatementList::codegen(){
   for(int i = 0; i < cnt; i++){
     if(stmt_list[i]->label!="NULL"){
       BasicBlock *newLabel = BasicBlock::Create(getGlobalContext(),stmt_list[i]->label,F);
+      Builder.CreateBr(newLabel);
       Builder.SetInsertPoint(newLabel);
       lab_table[stmt_list[i]->label] = newLabel;
     }

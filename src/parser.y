@@ -185,7 +185,9 @@ int main(int argc, char *argv[])
 
     /* interpreting and forming up the AST */
     Interpreter *it = new Interpreter();
+    printf("Output of my parser\n");
     start->accept(it);
+    printf("my parser over\n");
 
     /* generating the IR */
     start->codegen();

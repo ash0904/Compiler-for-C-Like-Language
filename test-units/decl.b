@@ -14,6 +14,7 @@ codeblock{
     		meta = ayush;
 		println i," is equal not to 1";
   	}
+	goto L1;
 	for i = ayush - 1,5 {
 		sum = sum + i;
 	}
